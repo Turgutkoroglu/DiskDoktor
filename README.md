@@ -6,7 +6,21 @@ dosyalarını bulur; önce gösterir, siz onaylamadan hiçbir şey silinmez.
 - Arayüz: Avalonia 11 (.NET 8), açık/koyu/sistem teması
 - Çekirdek: `DiskDoktor.Core` (arayüzden bağımsız, testli)
 
-## Çalıştırma
+## İndirme ve kullanım (son kullanıcı)
+
+1. GitHub'da bu deponun **Releases** sayfasından işletim sisteminize uygun dosyayı indirin
+   (depo gizli olduğu için GitHub hesabınızla giriş yapmış olmanız gerekir):
+   - Windows: `DiskDoktor-win-x64.zip` → açın, `DiskDoktor.exe`'ye çift tıklayın.
+   - Linux: `DiskDoktor-linux-x64.tar.gz` → `tar xzf …`, sonra `chmod +x DiskDoktor && ./DiskDoktor`.
+   - macOS (M1/M2/M3): `DiskDoktor-osx-arm64.zip` → açın, sağ tık → Aç.
+2. **Taramayı başlat**'a basın. Bulgular Güvenli / Dikkat / Riskli olarak gruplanır; Güvenli olanlar seçili gelir.
+3. İstediklerinizi işaretleyin → **Temizle…** → listeyi kontrol edin → **Temizliği başlat**.
+4. Varsayılan olarak dosyalar çöp kutusuna taşınır (geri alınabilir). Sonunda Markdown/CSV rapor kaydedebilirsiniz.
+
+Release yoksa kaynak koddan derleyin: [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) kurun,
+depoyu `git clone` edin ve aşağıdaki "Dağıtım" komutunu çalıştırın. Simge `scripts/make-icon.py` ile üretilir.
+
+## Çalıştırma (geliştirici)
 
 ```bash
 dotnet run --project src/DiskDoktor.App
