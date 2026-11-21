@@ -1,0 +1,295 @@
+[
+  {
+    "id": "win-user-temp",
+    "name": "Kullanıcı geçici dosyaları",
+    "category": "Sistem",
+    "description": "%TEMP% içindeki 2 günden eski geçici dosyalar.",
+    "risk": "Safe",
+    "platforms": ["Windows"],
+    "paths": ["{TEMP}"],
+    "kind": "DirectoryContents",
+    "minAgeDays": 2,
+    "excludeNames": [".net", "DiskDoktor"]
+  },
+  {
+    "id": "win-system-temp",
+    "name": "Windows geçici dosyaları",
+    "category": "Sistem",
+    "description": "C:\\Windows\\Temp içindeki eski dosyalar. Yönetici izni olmadan bir kısmı silinemez.",
+    "risk": "Safe",
+    "platforms": ["Windows"],
+    "paths": ["{WINDIR}/Temp"],
+    "kind": "DirectoryContents",
+    "minAgeDays": 2,
+    "requiresAdmin": true
+  },
+  {
+    "id": "win-crash-dumps",
+    "name": "Çökme dökümleri",
+    "category": "Sistem",
+    "description": "Uygulama çökme dökümleri (.dmp).",
+    "risk": "Safe",
+    "platforms": ["Windows"],
+    "paths": ["{LOCALAPPDATA}/CrashDumps"],
+    "kind": "Files",
+    "patterns": ["*.dmp"],
+    "recursive": true
+  },
+  {
+    "id": "win-wer",
+    "name": "Hata raporlama arşivi",
+    "category": "Sistem",
+    "description": "Windows Hata Raporlama'nın biriktirdiği eski raporlar.",
+    "risk": "Safe",
+    "platforms": ["Windows"],
+    "paths": ["{LOCALAPPDATA}/Microsoft/Windows/WER/ReportArchive", "{LOCALAPPDATA}/Microsoft/Windows/WER/ReportQueue"],
+    "kind": "DirectoryContents"
+  },
+  {
+    "id": "win-thumbcache",
+    "name": "Küçük resim önbelleği",
+    "category": "Sistem",
+    "description": "Gezginin küçük resim önbelleği; gerektiğinde yeniden oluşturulur. Kullanımdaki dosyalar atlanır.",
+    "risk": "Safe",
+    "platforms": ["Windows"],
+    "paths": ["{LOCALAPPDATA}/Microsoft/Windows/Explorer"],
+    "kind": "Files",
+    "patterns": ["thumbcache_*.db", "iconcache_*.db"]
+  },
+  {
+    "id": "win-inet-cache",
+    "name": "Windows İnternet önbelleği",
+    "category": "Tarayıcılar",
+    "description": "INetCache (Edge eski bileşenleri ve uygulamaların web önbelleği).",
+    "risk": "Safe",
+    "platforms": ["Windows"],
+    "paths": ["{LOCALAPPDATA}/Microsoft/Windows/INetCache"],
+    "kind": "DirectoryContents"
+  },
+  {
+    "id": "win-update-download",
+    "name": "Windows Update indirmeleri",
+    "category": "Sistem",
+    "description": "Kurulmuş güncellemelerin indirme önbelleği. Yönetici izni gerekir.",
+    "risk": "Caution",
+    "platforms": ["Windows"],
+    "paths": ["{WINDIR}/SoftwareDistribution/Download"],
+    "kind": "DirectoryContents",
+    "minAgeDays": 10,
+    "requiresAdmin": true,
+    "defaultSelected": false
+  },
+  {
+    "id": "chrome-cache",
+    "name": "Google Chrome önbelleği",
+    "category": "Tarayıcılar",
+    "description": "Chrome profillerinin önbelleği. Geçmiş, şifre ve yer imleri silinmez.",
+    "risk": "Safe",
+    "platforms": ["Windows", "Linux", "MacOS"],
+    "paths": [
+      "{LOCALAPPDATA}/Google/Chrome/User Data/*/Cache",
+      "{LOCALAPPDATA}/Google/Chrome/User Data/*/Code Cache",
+      "{LOCALAPPDATA}/Google/Chrome/User Data/*/GPUCache",
+      "{XDG_CACHE_HOME}/google-chrome",
+      "~/Library/Caches/Google/Chrome"
+    ],
+    "kind": "DirectoryContents"
+  },
+  {
+    "id": "chromium-cache",
+    "name": "Chromium önbelleği",
+    "category": "Tarayıcılar",
+    "description": "Chromium tabanlı tarayıcının disk önbelleği.",
+    "risk": "Safe",
+    "platforms": ["Linux"],
+    "paths": ["{XDG_CACHE_HOME}/chromium", "~/snap/chromium/common/.cache/chromium"],
+    "kind": "DirectoryContents"
+  },
+  {
+    "id": "edge-cache",
+    "name": "Microsoft Edge önbelleği",
+    "category": "Tarayıcılar",
+    "description": "Edge profillerinin önbelleği. Geçmiş ve şifreler silinmez.",
+    "risk": "Safe",
+    "platforms": ["Windows", "Linux", "MacOS"],
+    "paths": [
+      "{LOCALAPPDATA}/Microsoft/Edge/User Data/*/Cache",
+      "{LOCALAPPDATA}/Microsoft/Edge/User Data/*/Code Cache",
+      "{LOCALAPPDATA}/Microsoft/Edge/User Data/*/GPUCache",
+      "{XDG_CACHE_HOME}/microsoft-edge",
+      "~/Library/Caches/Microsoft Edge"
+    ],
+    "kind": "DirectoryContents"
+  },
+  {
+    "id": "firefox-cache",
+    "name": "Firefox önbelleği",
+    "category": "Tarayıcılar",
+    "description": "Firefox profillerinin cache2 klasörü.",
+    "risk": "Safe",
+    "platforms": ["Windows", "Linux", "MacOS"],
+    "paths": [
+      "{LOCALAPPDATA}/Mozilla/Firefox/Profiles/*/cache2",
+      "{XDG_CACHE_HOME}/mozilla/firefox/*/cache2",
+      "~/snap/firefox/common/.cache/mozilla/firefox/*/cache2",
+      "~/Library/Caches/Firefox/Profiles/*/cache2"
+    ],
+    "kind": "DirectoryContents"
+  },
+  {
+    "id": "linux-thumbnails",
+    "name": "Küçük resim önbelleği",
+    "category": "Sistem",
+    "description": "Dosya yöneticisinin ürettiği küçük resimler; gerektiğinde yeniden oluşturulur.",
+    "risk": "Safe",
+    "platforms": ["Linux"],
+    "paths": ["{XDG_CACHE_HOME}/thumbnails"],
+    "kind": "DirectoryContents"
+  },
+  {
+    "id": "linux-user-temp",
+    "name": "Eski geçici dosyalar",
+    "category": "Sistem",
+    "description": "Geçici klasörde size ait, 7 günden uzun süredir dokunulmamış dosyalar.",
+    "risk": "Caution",
+    "platforms": ["Linux", "MacOS"],
+    "paths": ["{TEMP}"],
+    "kind": "DirectoryContents",
+    "minAgeDays": 7,
+    "excludeNames": [".X11-unix", ".ICE-unix", ".XIM-unix", ".font-unix", ".Test-unix", ".net", "DiskDoktor"],
+    "defaultSelected": false
+  },
+  {
+    "id": "linux-app-cache",
+    "name": "Uygulama önbellekleri (~/.cache)",
+    "category": "Uygulamalar",
+    "description": "Uygulamaların yeniden üretilebilen önbellekleri. 14 günden eski girdiler; açık uygulamalar ilk açılışta biraz yavaşlayabilir.",
+    "risk": "Caution",
+    "platforms": ["Linux"],
+    "paths": ["{XDG_CACHE_HOME}"],
+    "kind": "DirectoryContents",
+    "minAgeDays": 14,
+    "excludeNames": ["thumbnails", "google-chrome", "chromium", "microsoft-edge", "mozilla", "pip", "go-build", "yarn", "JetBrains", "DiskDoktor", "fontconfig"],
+    "defaultSelected": false
+  },
+  {
+    "id": "linux-trash",
+    "name": "Çöp kutusu",
+    "category": "Çöp kutusu",
+    "description": "Çöp kutusundaki dosyalar kalıcı olarak silinir.",
+    "risk": "Risky",
+    "platforms": ["Linux"],
+    "paths": ["{XDG_DATA_HOME}/Trash/files", "{XDG_DATA_HOME}/Trash/info"],
+    "kind": "DirectoryContents",
+    "permanentOnly": true,
+    "defaultSelected": false
+  },
+  {
+    "id": "mac-trash",
+    "name": "Çöp kutusu",
+    "category": "Çöp kutusu",
+    "description": "Çöp kutusundaki dosyalar kalıcı olarak silinir. Tam Disk Erişimi gerekebilir.",
+    "risk": "Risky",
+    "platforms": ["MacOS"],
+    "paths": ["~/.Trash"],
+    "kind": "DirectoryContents",
+    "permanentOnly": true,
+    "defaultSelected": false
+  },
+  {
+    "id": "mac-user-cache",
+    "name": "Uygulama önbellekleri (~/Library/Caches)",
+    "category": "Uygulamalar",
+    "description": "Uygulamaların yeniden üretilebilen önbellekleri; 14 günden eski girdiler.",
+    "risk": "Caution",
+    "platforms": ["MacOS"],
+    "paths": ["~/Library/Caches"],
+    "kind": "DirectoryContents",
+    "minAgeDays": 14,
+    "excludeNames": ["Google", "Microsoft Edge", "Firefox", "com.apple.Safari", "CloudKit", "com.apple.akd"],
+    "defaultSelected": false
+  },
+  {
+    "id": "mac-logs",
+    "name": "Kullanıcı günlükleri",
+    "category": "Sistem",
+    "description": "~/Library/Logs altındaki 7 günden eski günlük dosyaları.",
+    "risk": "Safe",
+    "platforms": ["MacOS"],
+    "paths": ["~/Library/Logs"],
+    "kind": "Files",
+    "patterns": ["*.log", "*.log.*", "*.crash", "*.ips"],
+    "recursive": true,
+    "minAgeDays": 7
+  },
+  {
+    "id": "npm-cache",
+    "name": "npm önbelleği",
+    "category": "Geliştirici",
+    "description": "npm paket önbelleği; paketler gerektiğinde yeniden indirilir.",
+    "risk": "Caution",
+    "platforms": ["Windows", "Linux", "MacOS"],
+    "paths": ["{LOCALAPPDATA}/npm-cache/_cacache", "~/.npm/_cacache"],
+    "kind": "DirectoryContents",
+    "defaultSelected": false
+  },
+  {
+    "id": "pip-cache",
+    "name": "pip önbelleği",
+    "category": "Geliştirici",
+    "description": "Python pip indirme önbelleği.",
+    "risk": "Caution",
+    "platforms": ["Windows", "Linux", "MacOS"],
+    "paths": ["{LOCALAPPDATA}/pip/Cache", "{XDG_CACHE_HOME}/pip", "~/Library/Caches/pip"],
+    "kind": "DirectoryContents",
+    "defaultSelected": false
+  },
+  {
+    "id": "nuget-http-cache",
+    "name": "NuGet HTTP önbelleği",
+    "category": "Geliştirici",
+    "description": "NuGet'in indirme (http-cache) önbelleği. Kurulu paketlere dokunulmaz.",
+    "risk": "Caution",
+    "platforms": ["Windows", "Linux", "MacOS"],
+    "paths": ["{LOCALAPPDATA}/NuGet/v3-cache", "~/.local/share/NuGet/v3-cache", "~/.local/share/NuGet/http-cache"],
+    "kind": "DirectoryContents",
+    "defaultSelected": false
+  },
+  {
+    "id": "go-build-cache",
+    "name": "Go derleme önbelleği",
+    "category": "Geliştirici",
+    "description": "Go'nun derleme önbelleği; sonraki derleme biraz uzun sürer.",
+    "risk": "Caution",
+    "platforms": ["Windows", "Linux", "MacOS"],
+    "paths": ["{LOCALAPPDATA}/go-build", "{XDG_CACHE_HOME}/go-build", "~/Library/Caches/go-build"],
+    "kind": "DirectoryContents",
+    "defaultSelected": false
+  },
+  {
+    "id": "yarn-cache",
+    "name": "Yarn önbelleği",
+    "category": "Geliştirici",
+    "description": "Yarn paket önbelleği.",
+    "risk": "Caution",
+    "platforms": ["Windows", "Linux", "MacOS"],
+    "paths": ["{LOCALAPPDATA}/Yarn/Cache", "{XDG_CACHE_HOME}/yarn", "~/Library/Caches/Yarn"],
+    "kind": "DirectoryContents",
+    "defaultSelected": false
+  },
+  {
+    "id": "vscode-cache",
+    "name": "VS Code önbellekleri",
+    "category": "Geliştirici",
+    "description": "VS Code'un Cache, CachedData ve GPU önbellekleri. Eklentilere ve ayarlara dokunulmaz.",
+    "risk": "Safe",
+    "platforms": ["Windows", "Linux", "MacOS"],
+    "paths": [
+      "{APPDATA}/Code/Cache", "{APPDATA}/Code/CachedData", "{APPDATA}/Code/GPUCache", "{APPDATA}/Code/Code Cache",
+      "{XDG_CONFIG_HOME}/Code/Cache", "{XDG_CONFIG_HOME}/Code/CachedData", "{XDG_CONFIG_HOME}/Code/GPUCache", "{XDG_CONFIG_HOME}/Code/Code Cache",
+      "~/Library/Application Support/Code/Cache", "~/Library/Application Support/Code/CachedData", "~/Library/Application Support/Code/GPUCache"
+    ],
+    "kind": "DirectoryContents",
+    "minAgeDays": 1
+  }
+]

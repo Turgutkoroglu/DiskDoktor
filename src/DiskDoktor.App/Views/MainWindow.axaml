@@ -1,0 +1,257 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:DiskDoktor.App.ViewModels"
+        x:Class="DiskDoktor.App.Views.MainWindow"
+        x:Name="Root"
+        x:DataType="vm:MainViewModel"
+        Title="DiskDoktor"
+        Icon="/Assets/diskdoktor.png"
+        Width="1040" Height="720" MinWidth="560" MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource PageBg}">
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+    <!-- Header -->
+    <Border Grid.Row="0" Background="{DynamicResource HeaderBg}" Padding="20,14">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <Image Source="/Assets/diskdoktor.png" Width="34" Height="34" />
+          <StackPanel>
+            <TextBlock Text="DiskDoktor" FontSize="20" FontWeight="Bold" Foreground="White" />
+            <TextBlock Text="{Binding RuleCountText}" FontSize="12" Foreground="#A9B4C8" />
+          </StackPanel>
+        </StackPanel>
+        <Button Grid.Column="2" Name="ThemeButton" Content="Tema" Click="OnThemeClick"
+                Foreground="White" Background="#22FFFFFF" CornerRadius="8" Padding="12,6"
+                ToolTip.Tip="Açık / koyu / sistem teması" />
+      </Grid>
+    </Border>
+
+    <!-- Drives -->
+    <ItemsControl Grid.Row="1" ItemsSource="{Binding Drives}" Margin="16,14,16,0">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:DriveViewModel">
+          <Border Classes="card" Width="236" Margin="0,0,10,10" Padding="12">
+            <StackPanel Spacing="6">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="1" Text="{Binding Name}" Classes="muted" Margin="8,0,0,0"
+                           MaxWidth="110" TextTrimming="CharacterEllipsis" />
+              </Grid>
+              <ProgressBar Value="{Binding UsedPercent}" Maximum="100" Height="8" CornerRadius="4"
+                           Classes.full="{Binding IsAlmostFull}" />
+              <TextBlock Text="{Binding FreeText}" Classes="muted" />
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- Body -->
+    <Grid Grid.Row="2" Margin="16,4,16,0">
+
+      <!-- Start -->
+      <Border Classes="card" IsVisible="{Binding IsStart}" VerticalAlignment="Center" HorizontalAlignment="Center"
+              Padding="36,30" MaxWidth="560">
+        <StackPanel Spacing="14" HorizontalAlignment="Center">
+          <TextBlock Text="Diskinizde yer açalım" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" />
+          <TextBlock TextWrapping="Wrap" TextAlignment="Center" Classes="muted"
+                     Text="DiskDoktor yalnızca güvenle yeniden oluşturulabilen önbellek, geçici ve günlük dosyalarını bulur. Önce tarar ve gösterir; siz onaylamadan hiçbir şey silinmez." />
+          <Border Classes="card" IsVisible="{Binding HasWarning}" Background="{DynamicResource CautionBg}">
+            <TextBlock Text="{Binding Warning}" TextWrapping="Wrap" Foreground="{DynamicResource CautionFg}" />
+          </Border>
+          <Button Classes="primary accent" Content="Taramayı başlat" HorizontalAlignment="Center"
+                  Command="{Binding ScanCommand}" />
+          <TextBlock Text="{Binding StatusText}" Classes="muted" HorizontalAlignment="Center" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+
+      <!-- Scanning -->
+      <Border Classes="card" IsVisible="{Binding IsScanning}" VerticalAlignment="Center" HorizontalAlignment="Center"
+              Width="460" Padding="28">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Taranıyor…" Classes="h2" />
+          <ProgressBar Value="{Binding ProgressValue}" Maximum="100" Height="8" CornerRadius="4" />
+          <TextBlock Text="{Binding ProgressText}" Classes="muted" TextTrimming="CharacterEllipsis" />
+          <Button Content="İptal" HorizontalAlignment="Right" Command="{Binding CancelCommand}" />
+        </StackPanel>
+      </Border>
+
+      <!-- Results -->
+      <Grid IsVisible="{Binding IsResults}" RowDefinitions="Auto,Auto,*">
+        <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,10">
+          <ToggleButton Grid.Column="0" Classes="filter" IsChecked="{Binding ShowSafe}" Margin="0,0,6,0">
+            <StackPanel Spacing="2">
+              <Border Classes="chip safe" HorizontalAlignment="Left"><TextBlock Text="Güvenli" /></Border>
+              <TextBlock Text="{Binding SafeTotalText}" FontSize="18" FontWeight="Bold" />
+            </StackPanel>
+          </ToggleButton>
+          <ToggleButton Grid.Column="1" Classes="filter" IsChecked="{Binding ShowCaution}" Margin="3,0">
+            <StackPanel Spacing="2">
+              <Border Classes="chip caution" HorizontalAlignment="Left"><TextBlock Text="Dikkat" /></Border>
+              <TextBlock Text="{Binding CautionTotalText}" FontSize="18" FontWeight="Bold" />
+            </StackPanel>
+          </ToggleButton>
+          <ToggleButton Grid.Column="2" Classes="filter" IsChecked="{Binding ShowRisky}" Margin="6,0,0,0">
+            <StackPanel Spacing="2">
+              <Border Classes="chip risky" HorizontalAlignment="Left"><TextBlock Text="Riskli" /></Border>
+              <TextBlock Text="{Binding RiskyTotalText}" FontSize="18" FontWeight="Bold" />
+            </StackPanel>
+          </ToggleButton>
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,10">
+          <TextBox Text="{Binding SearchText}" Watermark="Ara: ad, klasör veya kategori" CornerRadius="8" />
+          <Button Grid.Column="1" Content="Tümünü seç" Margin="8,0,0,0" Command="{Binding SelectAllVisibleCommand}" />
+          <Button Grid.Column="2" Content="Hiçbiri" Margin="6,0,0,0" Command="{Binding SelectNoneCommand}" />
+          <Button Grid.Column="3" Content="Yeniden tara" Margin="6,0,0,0" Command="{Binding ScanCommand}" />
+        </Grid>
+
+        <TextBlock Grid.Row="2" IsVisible="{Binding IsEmptyResult}" HorizontalAlignment="Center" Margin="0,40"
+                   Text="Temizlenecek bir şey bulunamadı. Diskiniz zaten derli toplu." Classes="muted" FontSize="14" />
+
+        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding Categories}" Margin="0,0,16,0">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:CategoryViewModel">
+                <StackPanel Margin="0,0,0,14" Spacing="8">
+                  <Grid ColumnDefinitions="*,Auto" Margin="2,0">
+                    <TextBlock Text="{Binding Name}" Classes="h2" />
+                    <TextBlock Grid.Column="1" Text="{Binding TotalText}" Classes="muted" FontWeight="SemiBold" />
+                  </Grid>
+                  <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:FindingViewModel">
+                        <Border Classes="card" Margin="0,0,0,8" Padding="12,10">
+                          <Grid ColumnDefinitions="Auto,*,Auto">
+                            <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                              <WrapPanel>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <Border Classes="chip" Classes.safe="{Binding IsSafe}" Classes.caution="{Binding IsCaution}"
+                                        Classes.risky="{Binding IsRisky}" Margin="0,0,6,0">
+                                  <TextBlock Text="{Binding RiskText}" />
+                                </Border>
+                                <Border Classes="chip caution" IsVisible="{Binding RequiresAdmin}" Margin="0,0,6,0"
+                                        ToolTip.Tip="Bazı dosyalar yönetici izni olmadan silinemez; silinemeyenler raporda gösterilir.">
+                                  <TextBlock Text="Yönetici" />
+                                </Border>
+                                <Border Classes="chip risky" IsVisible="{Binding PermanentOnly}">
+                                  <TextBlock Text="Kalıcı silinir" />
+                                </Border>
+                              </WrapPanel>
+                              <TextBlock Text="{Binding Description}" Classes="muted" TextWrapping="Wrap" />
+                              <TextBlock Text="{Binding Root}" Classes="muted" FontSize="11.5" Opacity="0.8"
+                                         TextTrimming="LeadingCharacterEllipsis" ToolTip.Tip="{Binding Root}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="4" Margin="12,0,0,0" VerticalAlignment="Center"
+                                        HorizontalAlignment="Right" MinWidth="96">
+                              <TextBlock Text="{Binding SizeText}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Right" />
+                              <TextBlock Text="{Binding CountText}" Classes="muted" HorizontalAlignment="Right" />
+                              <Button Content="Klasörü aç" FontSize="11.5" Padding="8,3" HorizontalAlignment="Right"
+                                      Command="{Binding #Root.((vm:MainViewModel)DataContext).OpenFolderCommand}"
+                                      CommandParameter="{Binding}" />
+                            </StackPanel>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Grid>
+    </Grid>
+
+    <!-- Footer -->
+    <Border Grid.Row="3" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource CardBorder}"
+            BorderThickness="0,1,0,0" Padding="16,10">
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <StackPanel VerticalAlignment="Center" Spacing="2">
+          <TextBlock IsVisible="{Binding IsResults}" FontWeight="SemiBold">
+            <Run Text="{Binding SelectedCount}" /><Run Text=" seçili · " /><Run Text="{Binding SelectedTotalText}" />
+          </TextBlock>
+          <TextBlock Text="{Binding StatusText}" Classes="muted" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+        <CheckBox Grid.Column="1" IsVisible="{Binding IsResults}" IsChecked="{Binding UseTrash}" Margin="12,0"
+                  Content="Çöp kutusuna taşı" VerticalAlignment="Center"
+                  ToolTip.Tip="Geri alınabilir; alan çöp kutusu boşaltılınca açılır." />
+        <Button Grid.Column="2" Classes="primary accent" Content="Temizle…" IsVisible="{Binding IsResults}"
+                Command="{Binding RequestCleanCommand}" />
+      </Grid>
+    </Border>
+
+    <!-- Overlay: confirm / cleaning / done -->
+    <Border Grid.RowSpan="4" Background="{DynamicResource Scrim}" IsVisible="{Binding IsOverlay}">
+      <Border Classes="card" HorizontalAlignment="Center" VerticalAlignment="Center" Width="580" MaxHeight="560"
+              Padding="22" Margin="16">
+
+        <Grid>
+          <!-- Confirm -->
+          <Grid IsVisible="{Binding IsConfirm}" RowDefinitions="Auto,Auto,*,Auto,Auto">
+            <TextBlock Text="Bunlar temizlenecek" FontSize="18" FontWeight="Bold" />
+            <TextBlock Grid.Row="1" Classes="muted" Margin="0,4,0,10" TextWrapping="Wrap">
+              <Run Text="{Binding SelectedCount}" /><Run Text=" kalem, toplam " /><Run Text="{Binding SelectedTotalText}" FontWeight="SemiBold" /><Run Text=". Kullanımdaki dosyalar atlanır ve raporda gösterilir." />
+            </TextBlock>
+            <ScrollViewer Grid.Row="2" MaxHeight="260">
+              <ItemsControl ItemsSource="{Binding ConfirmItems}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:FindingViewModel">
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,3">
+                      <StackPanel>
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Root}" Classes="muted" TextTrimming="LeadingCharacterEllipsis" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding SizeText}" FontWeight="SemiBold" Margin="10,0,0,0" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+            <StackPanel Grid.Row="3" Spacing="6" Margin="0,12,0,0">
+              <Border Classes="chip risky" CornerRadius="8" Padding="10,6" IsVisible="{Binding HasRiskySelected}">
+                <TextBlock TextWrapping="Wrap" Text="Riskli kalemler seçili. Bunlar geri getirilemeyebilir; emin değilseniz geri dönüp seçimi kaldırın." />
+              </Border>
+              <Border Classes="chip caution" CornerRadius="8" Padding="10,6" IsVisible="{Binding HasPermanentOnlySelected}">
+                <TextBlock TextWrapping="Wrap" Text="'Kalıcı silinir' etiketli kalemler çöp kutusuna taşınmaz." />
+              </Border>
+              <CheckBox IsChecked="{Binding UseTrash}" Content="Çöp kutusuna taşı (geri alınabilir, alan çöp boşaltılınca açılır)" />
+            </StackPanel>
+            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,14,0,0">
+              <Button Content="Geri" Command="{Binding BackCommand}" />
+              <Button Classes="primary accent" Content="Temizliği başlat" Command="{Binding ConfirmCleanCommand}" />
+            </StackPanel>
+          </Grid>
+
+          <!-- Cleaning -->
+          <StackPanel IsVisible="{Binding IsCleaning}" Spacing="12">
+            <TextBlock Text="Temizleniyor…" FontSize="18" FontWeight="Bold" />
+            <ProgressBar Value="{Binding ProgressValue}" Maximum="100" Height="8" CornerRadius="4" />
+            <TextBlock Text="{Binding ProgressText}" Classes="muted" TextTrimming="CharacterEllipsis" />
+            <Button Content="Durdur" HorizontalAlignment="Right" Command="{Binding CancelCommand}" />
+          </StackPanel>
+
+          <!-- Done -->
+          <StackPanel IsVisible="{Binding IsDone}" Spacing="10">
+            <TextBlock Text="{Binding ResultTitle}" FontSize="20" FontWeight="Bold" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding ResultDetail}" Classes="muted" TextWrapping="Wrap" />
+            <Border Classes="chip caution" CornerRadius="8" Padding="10,8" IsVisible="{Binding ResultHasProblems}">
+              <TextBlock Text="{Binding ProblemText}" TextWrapping="Wrap" FontWeight="Normal" />
+            </Border>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
+              <Button Content="Markdown rapor" Command="{Binding ExportMarkdownCommand}" />
+              <Button Content="CSV rapor" Command="{Binding ExportCsvCommand}" />
+              <Button Classes="primary accent" Content="Tamam" Command="{Binding BackCommand}" />
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Border>
+  </Grid>
+</Window>

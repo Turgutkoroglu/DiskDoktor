@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5CB1D069-10F3-4D03-A92A-96079E8798EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskDoktor.Core", "src\DiskDoktor.Core\DiskDoktor.Core.csproj", "{D575959B-F92E-4676-86BF-0C72540E6108}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskDoktor.App", "src\DiskDoktor.App\DiskDoktor.App.csproj", "{F5D6718A-622F-4165-8940-7A5F787C121C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{205D719D-3335-4BC4-A54E-EEDCDE1C0B4F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskDoktor.Tests", "tests\DiskDoktor.Tests\DiskDoktor.Tests.csproj", "{6D586BC9-1740-49F7-B232-3D2BF9C82790}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D575959B-F92E-4676-86BF-0C72540E6108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D575959B-F92E-4676-86BF-0C72540E6108}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D575959B-F92E-4676-86BF-0C72540E6108}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D575959B-F92E-4676-86BF-0C72540E6108}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5D6718A-622F-4165-8940-7A5F787C121C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5D6718A-622F-4165-8940-7A5F787C121C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5D6718A-622F-4165-8940-7A5F787C121C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5D6718A-622F-4165-8940-7A5F787C121C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D586BC9-1740-49F7-B232-3D2BF9C82790}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D586BC9-1740-49F7-B232-3D2BF9C82790}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D586BC9-1740-49F7-B232-3D2BF9C82790}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D586BC9-1740-49F7-B232-3D2BF9C82790}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D575959B-F92E-4676-86BF-0C72540E6108} = {5CB1D069-10F3-4D03-A92A-96079E8798EC}
+		{F5D6718A-622F-4165-8940-7A5F787C121C} = {5CB1D069-10F3-4D03-A92A-96079E8798EC}
+		{6D586BC9-1740-49F7-B232-3D2BF9C82790} = {205D719D-3335-4BC4-A54E-EEDCDE1C0B4F}
+	EndGlobalSection
+EndGlobal

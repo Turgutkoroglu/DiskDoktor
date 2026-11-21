@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>DiskDoktor.Core</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Rules\rules.json" LogicalName="DiskDoktor.Core.rules.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DiskDoktor.Tests" />
+  </ItemGroup>
+</Project>

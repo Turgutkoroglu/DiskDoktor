@@ -1,0 +1,104 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="DiskDoktor.App.App"
+             RequestedThemeVariant="Default">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="PageBg" Color="#F4F6FA" />
+          <SolidColorBrush x:Key="CardBg" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="CardBorder" Color="#E3E7EE" />
+          <SolidColorBrush x:Key="Muted" Color="#5B6474" />
+          <SolidColorBrush x:Key="HeaderBg" Color="#16213A" />
+          <SolidColorBrush x:Key="SafeBg" Color="#E3F6EA" />
+          <SolidColorBrush x:Key="SafeFg" Color="#11703A" />
+          <SolidColorBrush x:Key="CautionBg" Color="#FFF3DC" />
+          <SolidColorBrush x:Key="CautionFg" Color="#8A5300" />
+          <SolidColorBrush x:Key="RiskyBg" Color="#FDE4E4" />
+          <SolidColorBrush x:Key="RiskyFg" Color="#A41F1F" />
+          <SolidColorBrush x:Key="Scrim" Color="#80101828" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="PageBg" Color="#0F1420" />
+          <SolidColorBrush x:Key="CardBg" Color="#182030" />
+          <SolidColorBrush x:Key="CardBorder" Color="#263046" />
+          <SolidColorBrush x:Key="Muted" Color="#9AA4B5" />
+          <SolidColorBrush x:Key="HeaderBg" Color="#0A0E17" />
+          <SolidColorBrush x:Key="SafeBg" Color="#143524" />
+          <SolidColorBrush x:Key="SafeFg" Color="#7BE0A3" />
+          <SolidColorBrush x:Key="CautionBg" Color="#3A2C10" />
+          <SolidColorBrush x:Key="CautionFg" Color="#F5C46B" />
+          <SolidColorBrush x:Key="RiskyBg" Color="#3E1A1C" />
+          <SolidColorBrush x:Key="RiskyFg" Color="#FF9C9C" />
+          <SolidColorBrush x:Key="Scrim" Color="#B0000000" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="14" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+      <Setter Property="FontSize" Value="12.5" />
+    </Style>
+    <Style Selector="TextBlock.h2">
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.chip">
+      <Setter Property="CornerRadius" Value="999" />
+      <Setter Property="Padding" Value="9,2" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.chip > TextBlock">
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.safe"><Setter Property="Background" Value="{DynamicResource SafeBg}" /></Style>
+    <Style Selector="Border.safe > TextBlock"><Setter Property="Foreground" Value="{DynamicResource SafeFg}" /></Style>
+    <Style Selector="Border.caution"><Setter Property="Background" Value="{DynamicResource CautionBg}" /></Style>
+    <Style Selector="Border.caution > TextBlock"><Setter Property="Foreground" Value="{DynamicResource CautionFg}" /></Style>
+    <Style Selector="Border.risky"><Setter Property="Background" Value="{DynamicResource RiskyBg}" /></Style>
+    <Style Selector="Border.risky > TextBlock"><Setter Property="Foreground" Value="{DynamicResource RiskyFg}" /></Style>
+    <Style Selector="ProgressBar.full">
+      <Setter Property="Foreground" Value="#E5484D" />
+    </Style>
+    <Style Selector="ToggleButton.filter">
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="Opacity" Value="0.55" />
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="ToggleButton.filter:checked">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="ToggleButton.filter:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+    </Style>
+    <Style Selector="ToggleButton.filter:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="18,9" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+  </Application.Styles>
+</Application>
