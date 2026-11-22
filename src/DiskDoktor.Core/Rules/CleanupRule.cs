@@ -10,6 +10,8 @@ public enum TargetKind
     DirectoryContents,
     /// <summary>Only files matching <see cref="CleanupRule.Patterns"/> are candidates.</summary>
     Files,
+    /// <summary>A tool does the cleaning (apt-get clean, DISM, journalctl...). Built-in rules only.</summary>
+    Command,
 }
 
 public sealed class CleanupRule
@@ -30,12 +32,36 @@ public sealed class CleanupRule
     public int MinAgeDays { get; init; }
     /// <summary>Entry names that are never touched (e.g. lock files, our own extraction folder).</summary>
     public string[] ExcludeNames { get; init; } = [];
-    /// <summary>The OS usually denies access without elevation; failures are expected and reported.</summary>
+    /// <summary>Needs administrator/root. Cleaning goes through the elevated helper and is permanent.</summary>
     public bool RequiresAdmin { get; init; }
     /// <summary>Moving to trash makes no sense (e.g. the trash itself), so deletion is always permanent.</summary>
     public bool PermanentOnly { get; init; }
     /// <summary>Selected by default after a scan.</summary>
     public bool DefaultSelected { get; init; } = true;
+    /// <summary>Individual items start selected when the finding is selected (false for "pick what you want" lists).</summary>
+    public bool ItemsSelectedByDefault { get; init; } = true;
+    /// <summary>May touch files inside Documents/Desktop/Pictures/... (personal-file discovery, Downloads).</summary>
+    public bool AllowUserFiles { get; init; }
+
+    /// <summary>Command kind: program and arguments, run without a shell.</summary>
+    public string[] Command { get; init; } = [];
+    /// <summary>Command kind: a built-in action instead of a program (e.g. "empty-recycle-bin").</summary>
+    public string? Builtin { get; init; }
+    /// <summary>Command kind: folders whose size shows what the command will free; the rule is hidden when none exists.</summary>
+    public string[] SizePaths { get; init; } = [];
+    /// <summary>Program that must be on PATH for the rule to apply (e.g. "apt-get", "docker").</summary>
+    public string? Requires { get; init; }
 
     public bool AppliesTo(OsKind os) => Platforms.Length == 0 || Platforms.Contains(os);
+
+    public string CommandText
+    {
+        get
+        {
+            if (Builtin is not null) return Builtin;
+            // "sh -c <script>" / "powershell -Command <script>": show the tool, not the whole script.
+            if (Command.Length > 2 && Command[^1].Length > 60) return string.Join(' ', Command.Take(Command.Length - 1)) + " …";
+            return string.Join(' ', Command.Select(a => a.Contains(' ') ? $"\"{a}\"" : a));
+        }
+    }
 }

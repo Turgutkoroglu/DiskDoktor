@@ -70,6 +70,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _cautionTotalText = "0 B";
     [ObservableProperty] private string _riskyTotalText = "0 B";
     [ObservableProperty] private string _foundTotalText = "0 B";
+    [ObservableProperty] private int _unknownCount;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RequestCleanCommand))]
@@ -77,6 +78,14 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _selectedTotalText = "0 B";
     [ObservableProperty] private bool _hasRiskySelected;
     [ObservableProperty] private bool _hasPermanentOnlySelected;
+    [ObservableProperty] private bool _hasAdminSelected;
+    [ObservableProperty] private bool _showElevateHint;
+
+    public bool IsElevated { get; init; }
+    public bool CanRestartElevated { get; init; }
+
+    [RelayCommand]
+    private void RestartElevated() => _shell.RestartElevated();
     [ObservableProperty] private bool _isEmptyResult;
 
     [ObservableProperty] private double _progressValue;
@@ -179,7 +188,9 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var sel = _all.Where(f => f.IsSelected).ToList();
         SelectedCount = sel.Count;
-        SelectedTotalText = SizeFormatter.Format(sel.Sum(f => f.Size));
+        SelectedTotalText = SizeFormatter.Format(sel.Sum(f => f.SelectedSize)) +
+                            (sel.Any(f => !f.SizeKnown) ? " + boyutu bilinmeyenler" : "");
+        HasAdminSelected = sel.Any(f => f.RequiresAdmin);
         HasRiskySelected = sel.Any(f => f.IsRisky);
         HasPermanentOnlySelected = sel.Any(f => f.PermanentOnly);
     }
@@ -199,7 +210,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenFolder(FindingViewModel? f)
     {
-        if (f is not null) _shell.OpenFolder(f.Root);
+        if (f is not null && f.CanOpenFolder) _shell.OpenFolder(f.FolderPath);
     }
 
     private bool CanRequestClean() => SelectedCount > 0;
@@ -227,7 +238,7 @@ public sealed partial class MainViewModel : ObservableObject
         Screen = Screen.Cleaning;
         ProgressValue = 0;
         ProgressText = "Temizlik başlıyor…";
-        var requests = ConfirmItems.Select(f => new CleanRequest(f.Finding, f.Finding.Items)).ToList();
+        var requests = ConfirmItems.Select(f => new CleanRequest(f.Finding, f.HasItems ? f.SelectedItems : f.Finding.Items)).ToList();
         var progress = new Progress<CleanProgress>(p =>
         {
             ProgressValue = 100.0 * p.Done / Math.Max(1, p.Total);
@@ -272,7 +283,12 @@ public sealed partial class MainViewModel : ObservableObject
         var cleaned = r.Items.Where(i => i.Outcome is ItemOutcome.Deleted or ItemOutcome.Trashed)
                               .Select(i => i.Path).ToHashSet();
         foreach (var f in ConfirmItems.ToList())
-            if (f.Finding.Items.All(i => cleaned.Contains(i.Path))) _all.Remove(f);
+        {
+            bool done = f.HasItems
+                ? f.Finding.Items.All(i => cleaned.Contains(i.Path))
+                : r.Items.Any(i => i.RuleName == f.Name && i.Outcome == ItemOutcome.Deleted);
+            if (done) _all.Remove(f);
+        }
         LoadFindingsFromCurrent();
     }
 
@@ -282,7 +298,9 @@ public sealed partial class MainViewModel : ObservableObject
         CautionTotalText = SizeFormatter.Format(_all.Where(f => f.IsCaution).Sum(f => f.Size));
         RiskyTotalText = SizeFormatter.Format(_all.Where(f => f.IsRisky).Sum(f => f.Size));
         FoundTotalText = SizeFormatter.Format(_all.Sum(f => f.Size));
+        UnknownCount = _all.Count(f => !f.SizeKnown);
         IsEmptyResult = _all.Count == 0;
+        ShowElevateHint = CanRestartElevated && !IsElevated && _all.Any(f => f.RequiresAdmin && (f.Finding.AccessDenied || !f.SizeKnown));
         ApplyFilter();
         UpdateSelection();
     }

@@ -33,11 +33,13 @@ public interface ICleaner
         IProgress<CleanProgress>? progress, CancellationToken ct);
 }
 
-public sealed class SafeDeleter(ISystemEnvironment env, ITrash trash, string? logDirectory) : ICleaner
+public sealed class SafeDeleter(ISystemEnvironment env, ITrash trash, string? logDirectory, IElevator? elevator = null) : ICleaner
 {
     private readonly PathGuard _guard = new(env);
+    private readonly Rules.PathResolver _resolver = new(env);
 
-    public SafeDeleter(ISystemEnvironment env) : this(env, TrashFactory.Create(env), AppPaths.LogDirectory(env)) { }
+    public SafeDeleter(ISystemEnvironment env)
+        : this(env, TrashFactory.Create(env), AppPaths.LogDirectory(env), ElevatorFactory.Create(env)) { }
 
     public Task<CleanResult> CleanAsync(IReadOnlyList<CleanRequest> requests, DeleteMode mode,
         IProgress<CleanProgress>? progress, CancellationToken ct)
@@ -48,23 +50,43 @@ public sealed class SafeDeleter(ISystemEnvironment env, ITrash trash, string? lo
     {
         var started = DateTime.UtcNow;
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        var work = requests.SelectMany(r => r.Items.Select(i => (r.Finding, Item: i))).ToList();
-        var results = new List<ItemResult>(work.Count);
+        var results = new List<ItemResult>();
         long freed = 0;
         bool cancelled = false;
 
-        for (int n = 0; n < work.Count; n++)
+        // Admin work first, in one elevated run, so the password prompt comes once and early.
+        var admin = requests.Where(r => r.Finding.Rule.RequiresAdmin && !env.IsElevated).ToList();
+        var local = requests.Except(admin).ToList();
+        var work = local.SelectMany(r => r.Finding.IsCommand
+            ? [(r.Finding, Item: (ScanItem?)null)]
+            : r.Items.Select(i => (r.Finding, Item: (ScanItem?)i))).ToList();
+        int total = work.Count + (admin.Count > 0 ? 1 : 0), done = 0;
+
+        if (admin.Count > 0)
+        {
+            progress?.Report(new CleanProgress(0, total, 0, "Yönetici izni bekleniyor…"));
+            var adminResults = RunElevated(admin, ct);
+            results.AddRange(adminResults);
+            freed += adminResults.Sum(r => r.BytesFreed);
+            done++;
+        }
+
+        foreach (var (finding, item) in work)
         {
             if (ct.IsCancellationRequested) { cancelled = true; break; }
-            var (finding, item) = work[n];
-            progress?.Report(new CleanProgress(n, work.Count, freed, item.Path));
-
-            var effective = finding.Rule.PermanentOnly || !trash.IsAvailable ? DeleteMode.Permanent : mode;
-            var r = DeleteOne(finding, item, effective, ct);
+            progress?.Report(new CleanProgress(done, total, freed, item?.Path ?? finding.Rule.CommandText));
+            ItemResult r;
+            if (item is null) r = RunCommand(finding, ct);
+            else
+            {
+                var effective = finding.Rule.PermanentOnly || !trash.IsAvailable ? DeleteMode.Permanent : mode;
+                r = DeleteOne(finding, item, effective, ct);
+            }
             freed += r.BytesFreed;
             results.Add(r);
+            done++;
         }
-        progress?.Report(new CleanProgress(results.Count, work.Count, freed, ""));
+        progress?.Report(new CleanProgress(done, total, freed, ""));
 
         var result = new CleanResult
         {
@@ -77,10 +99,83 @@ public sealed class SafeDeleter(ISystemEnvironment env, ITrash trash, string? lo
         };
     }
 
+    private List<ItemResult> RunElevated(List<CleanRequest> admin, CancellationToken ct)
+    {
+        List<ItemResult> Fail(string why) => admin.SelectMany(r => r.Finding.IsCommand
+                ? [new ItemResult(r.Finding.Rule.CommandText, r.Finding.Rule.Name, r.Finding.TotalSize, 0, ItemOutcome.Failed, why)]
+                : r.Items.Select(i => new ItemResult(i.Path, r.Finding.Rule.Name, i.Size, 0, ItemOutcome.Failed, why))).ToList();
+
+        if (elevator is null || !elevator.IsAvailable) return Fail("Bu sistemde yönetici izni istenemiyor.");
+
+        string dir = Path.Combine(Path.GetTempPath(), "DiskDoktor-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            string req = Path.Combine(dir, "istek.json"), res = Path.Combine(dir, "sonuc.json");
+            var payload = new AdminRequest(admin.Select(r => new AdminTask(r.Finding.Rule.Id, r.Finding.Root,
+                r.Finding.IsCommand ? [] : r.Items.Select(i => i.Path).ToList())).ToList());
+            File.WriteAllText(req, JsonSerializer.Serialize(payload));
+            File.WriteAllText(res, "");
+            var error = elevator.RunHelperAsync(req, res, ct).GetAwaiter().GetResult();
+            if (error is not null) return Fail(error);
+            var dto = JsonSerializer.Deserialize<ResultDto>(File.ReadAllText(res));
+            return dto?.Items ?? Fail("Yönetici yardımcısı sonuç yazmadı.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException
+                                       or System.ComponentModel.Win32Exception or OperationCanceledException)
+        {
+            return Fail(ex.Message);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    }
+
+    private ItemResult RunCommand(Finding finding, CancellationToken ct)
+    {
+        var rule = finding.Rule;
+        long before = MeasureSizePaths(rule, ct);
+        try
+        {
+            if (rule.Builtin == "empty-recycle-bin")
+            {
+                var (bytes, _) = WindowsRecycleBinApi.Query();
+                var err = WindowsRecycleBinApi.Empty();
+                return new ItemResult(rule.CommandText, rule.Name, bytes, err is null ? bytes : 0,
+                    err is null ? ItemOutcome.Deleted : ItemOutcome.Failed, err);
+            }
+            var argv = rule.Command.ToList();
+            argv[0] = env.FindProgram(argv[0]) ?? argv[0];
+            var (code, output) = ProcessHelper.RunAsync(argv, ct).GetAwaiter().GetResult();
+            long after = MeasureSizePaths(rule, ct);
+            long freed = Math.Max(0, before - after);
+            return code == 0
+                ? new ItemResult(rule.CommandText, rule.Name, finding.TotalSize, freed, ItemOutcome.Deleted, null)
+                : new ItemResult(rule.CommandText, rule.Name, finding.TotalSize, freed, ItemOutcome.Failed, $"Çıkış kodu {code}: {output}");
+        }
+        catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception or InvalidOperationException
+                                       or OperationCanceledException or PlatformNotSupportedException)
+        {
+            return new ItemResult(rule.CommandText, rule.Name, finding.TotalSize, 0, ItemOutcome.Failed, ex.Message);
+        }
+    }
+
+    private long MeasureSizePaths(Rules.CleanupRule rule, CancellationToken ct)
+    {
+        long size = 0;
+        foreach (var p in rule.SizePaths)
+        {
+            foreach (var d in _resolver.Resolve(p)) size += Scanner.Measure(new DirectoryInfo(d), ct).Size;
+            if (_resolver.ExpandTokens(p) is { } f && File.Exists(f)) size += Scanner.SafeLength(new FileInfo(f));
+        }
+        return size;
+    }
+
     private ItemResult DeleteOne(Finding finding, ScanItem item, DeleteMode mode, CancellationToken ct)
     {
         string rule = finding.Rule.Name;
-        var reason = _guard.Check(item.Path, finding.Root);
+        var reason = _guard.Check(item.Path, finding.Root, finding.Rule.AllowUserFiles);
         if (reason is not null) return new(item.Path, rule, item.Size, 0, ItemOutcome.Skipped, reason);
 
         bool isLink = PathGuard.IsLink(item.Path);

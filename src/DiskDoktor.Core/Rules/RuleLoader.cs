@@ -20,10 +20,11 @@ public static class RuleLoader
     {
         using var stream = typeof(RuleLoader).Assembly.GetManifestResourceStream("DiskDoktor.Core.rules.json")
             ?? throw new InvalidOperationException("Gömülü rules.json bulunamadı.");
-        return Parse(stream);
+        return Parse(stream, allowCommands: true);
     }
 
-    public static IReadOnlyList<CleanupRule> Parse(Stream json)
+    /// <param name="allowCommands">Only built-in rules may run programs; user files are data, never code.</param>
+    public static IReadOnlyList<CleanupRule> Parse(Stream json, bool allowCommands = false)
     {
         List<CleanupRule>? rules;
         try
@@ -35,14 +36,14 @@ public static class RuleLoader
             throw new RuleValidationException($"Kural dosyası okunamadı: {ex.Message}");
         }
         rules ??= [];
-        Validate(rules);
+        Validate(rules, allowCommands);
         return rules;
     }
 
-    public static IReadOnlyList<CleanupRule> Parse(string json)
+    public static IReadOnlyList<CleanupRule> Parse(string json, bool allowCommands = false)
     {
         using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json));
-        return Parse(ms);
+        return Parse(ms, allowCommands);
     }
 
     /// <summary>
@@ -69,7 +70,7 @@ public static class RuleLoader
         return byId.Values.Where(r => r.AppliesTo(env.Os)).ToList();
     }
 
-    internal static void Validate(IReadOnlyList<CleanupRule> rules)
+    internal static void Validate(IReadOnlyList<CleanupRule> rules, bool allowCommands)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var r in rules)
@@ -77,11 +78,18 @@ public static class RuleLoader
             if (string.IsNullOrWhiteSpace(r.Id)) throw new RuleValidationException("Kimliği boş bir kural var.");
             if (!seen.Add(r.Id)) throw new RuleValidationException($"Yinelenen kural kimliği: {r.Id}");
             if (string.IsNullOrWhiteSpace(r.Name)) throw new RuleValidationException($"{r.Id}: ad boş.");
-            if (r.Paths.Length == 0) throw new RuleValidationException($"{r.Id}: en az bir yol gerekli.");
+            if (r.Kind == TargetKind.Command)
+            {
+                if (!allowCommands) throw new RuleValidationException($"{r.Id}: komut kuralları yalnız yerleşik olabilir.");
+                if (r.Command.Length == 0 && r.Builtin is null) throw new RuleValidationException($"{r.Id}: komut boş.");
+            }
+            else if (r.Command.Length > 0 || r.Builtin is not null)
+                throw new RuleValidationException($"{r.Id}: komut yalnız Command türünde kullanılabilir.");
+            else if (r.Paths.Length == 0) throw new RuleValidationException($"{r.Id}: en az bir yol gerekli.");
             if (r.MinAgeDays < 0) throw new RuleValidationException($"{r.Id}: minAgeDays negatif olamaz.");
             if (r.Kind == TargetKind.Files && r.Patterns.Length == 0)
                 throw new RuleValidationException($"{r.Id}: Files türü için en az bir desen gerekli.");
-            foreach (var p in r.Paths)
+            foreach (var p in r.Paths.Concat(r.SizePaths))
             {
                 if (string.IsNullOrWhiteSpace(p)) throw new RuleValidationException($"{r.Id}: boş yol.");
                 if (p.Replace('\\', '/').Split('/').Any(s => s == ".."))

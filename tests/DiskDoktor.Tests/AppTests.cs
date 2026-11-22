@@ -60,6 +60,7 @@ internal sealed class FakeShell : IShell
     public string? Saved { get; private set; }
     public Task<string?> SaveTextAsync(string n, string e, string d, string content) { Saved = content; return Task.FromResult<string?>("/x." + e); }
     public void OpenFolder(string path) { }
+    public void RestartElevated() { }
 }
 
 public class MainViewModelTests
@@ -181,7 +182,11 @@ public class MainWindowRenderTests
     [InlineData("narrow", 560, 640)]
     public async Task RendersResults(string name, int width, int height)
     {
-        var w = await Show(name == "dark" ? ThemeVariant.Dark : ThemeVariant.Light, width, height);
+        var w = await Show(name == "dark" ? ThemeVariant.Dark : ThemeVariant.Light, width, height, vm =>
+        {
+            vm.AllFindings.First(f => f.IsSafe).IsExpanded = true;
+            return Task.CompletedTask;
+        });
         var frame = w.CaptureRenderedFrame();
         Assert.NotNull(frame);
         frame!.Save(Path.Combine(OutDir, $"results-{name}.png"));

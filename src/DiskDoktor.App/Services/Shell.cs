@@ -11,6 +11,8 @@ public interface IShell
     string MachineName { get; }
     Task<string?> SaveTextAsync(string suggestedName, string extension, string description, string content);
     void OpenFolder(string path);
+    /// <summary>Windows: start again with UAC and close this instance.</summary>
+    void RestartElevated();
 }
 
 public sealed class AvaloniaShell(Func<TopLevel?> topLevel, ISystemEnvironment env) : IShell
@@ -34,6 +36,17 @@ public sealed class AvaloniaShell(Func<TopLevel?> topLevel, ISystemEnvironment e
         await using var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(true));
         await writer.WriteAsync(content);
         return file.TryGetLocalPath() ?? file.Name;
+    }
+
+    public void RestartElevated()
+    {
+        if (!OperatingSystem.IsWindows() || Environment.ProcessPath is not { } exe) return;
+        try
+        {
+            Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true, Verb = "runas" })?.Dispose();
+            (Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.Shutdown();
+        }
+        catch (System.ComponentModel.Win32Exception) { /* user said no */ }
     }
 
     public void OpenFolder(string path)

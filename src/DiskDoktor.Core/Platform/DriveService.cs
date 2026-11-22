@@ -53,7 +53,8 @@ public sealed class DriveService(ISystemEnvironment env) : IDriveService
             if (os != OsKind.Windows)
             {
                 if (PseudoFormats.Contains(d.Format)) continue;
-                if (PseudoPrefixes.Any(p => d.Name == p || d.Name.StartsWith(p + "/", StringComparison.Ordinal))) continue;
+                if (!d.Name.StartsWith("/run/media/", StringComparison.Ordinal) &&
+                    PseudoPrefixes.Any(p => d.Name == p || d.Name.StartsWith(p + "/", StringComparison.Ordinal))) continue;
                 // Bind mounts and btrfs subvolumes show the same device twice: keep the shortest path.
                 if (!seenSizes.Add((d.Total, d.Free / (1024 * 1024)))) continue;
             }

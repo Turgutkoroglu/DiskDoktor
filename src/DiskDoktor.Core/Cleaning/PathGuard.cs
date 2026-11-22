@@ -13,6 +13,7 @@ public sealed class PathGuard
     private readonly StringComparison _cmp;
     private readonly List<string> _protectedExact = [];   // never delete these or their ancestors
     private readonly List<string> _protectedTrees = [];   // never delete anything inside these
+    private readonly List<string> _userTrees = [];        // personal folders: only rules that allow user files
 
     public PathGuard(ISystemEnvironment env)
     {
@@ -33,7 +34,7 @@ public sealed class PathGuard
         {
             var p = env.GetSpecialFolder(f);
             // On Linux some of these fall back to $HOME when unset; protecting $HOME as a tree would block everything.
-            if (p is not null && !Same(p, home)) AddTree(p);
+            if (p is not null && !Same(p, home)) { _userTrees.Add(Normalize(p)); AddExact(p); }
         }
 
         switch (env.Os)
@@ -95,7 +96,7 @@ public sealed class PathGuard
     }
 
     /// <summary>Returns null when deletion is allowed, otherwise a human readable reason.</summary>
-    public string? Check(string target, string allowedRoot)
+    public string? Check(string target, string allowedRoot, bool allowUserFiles = false)
     {
         if (string.IsNullOrWhiteSpace(target) || !Path.IsPathFullyQualified(target))
             return "Yol tam değil.";
@@ -112,6 +113,9 @@ public sealed class PathGuard
             if (Same(t, p) || IsStrictlyInside(p, t)) return $"Korunan konum: {p}";
         foreach (var p in _protectedTrees)
             if (Same(t, p) || IsStrictlyInside(t, p) || IsStrictlyInside(p, t)) return $"Korunan konum: {p}";
+        if (!allowUserFiles)
+            foreach (var p in _userTrees)
+                if (IsStrictlyInside(t, p)) return $"Kişisel klasör: {p}";
 
         // No link between the root and the target (the target itself may be a link: only the link is removed).
         var dir = Path.GetDirectoryName(t);

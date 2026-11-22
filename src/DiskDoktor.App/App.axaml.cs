@@ -41,7 +41,12 @@ public partial class App : Application
             rules = [];
             warning = "Kurallar yüklenemedi: " + ex.Message;
         }
-        return new MainViewModel(new Scanner(env), new SafeDeleter(env), new DriveService(env),
-            new AvaloniaShell(topLevel, env), rules, warning, env.Os);
+        var drives = new DriveService(env);
+        return new MainViewModel(new Scanner(env, discovery: new DiscoveryScanner(env, drives)), new SafeDeleter(env), drives,
+            new AvaloniaShell(topLevel, env), rules, warning, env.Os)
+        {
+            IsElevated = env.IsElevated,
+            CanRestartElevated = env.Os == OsKind.Windows,
+        };
     }
 }

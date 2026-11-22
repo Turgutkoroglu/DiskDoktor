@@ -12,6 +12,10 @@ public interface ISystemEnvironment
     /// <summary>Returns null when the folder does not exist on this OS.</summary>
     string? GetSpecialFolder(Environment.SpecialFolder folder);
     string AppBaseDirectory { get; }
+    /// <summary>Running as administrator / root.</summary>
+    bool IsElevated { get; }
+    /// <summary>Full path of a program on PATH (or common sbin folders), null when missing.</summary>
+    string? FindProgram(string name);
     bool PathsAreCaseSensitive => Os == OsKind.Linux;
 }
 
@@ -28,6 +32,24 @@ public sealed class SystemEnvironment : ISystemEnvironment
     public string TempDirectory { get; } = Path.GetTempPath();
 
     public string AppBaseDirectory { get; } = AppContext.BaseDirectory;
+
+    public bool IsElevated { get; } = Environment.IsPrivilegedProcess;
+
+    public string? FindProgram(string name)
+    {
+        var dirs = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries).ToList();
+        if (Os != OsKind.Windows) dirs.AddRange(["/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/sbin", "/bin", "/opt/homebrew/bin", "/snap/bin"]);
+        string[] exts = Os == OsKind.Windows
+            ? ["", .. (Environment.GetEnvironmentVariable("PATHEXT") ?? ".EXE;.CMD;.BAT").Split(';')]
+            : [""];
+        foreach (var d in dirs.Distinct())
+            foreach (var e in exts)
+            {
+                var p = Path.Combine(d, name + e);
+                if (File.Exists(p)) return p;
+            }
+        return null;
+    }
 
     public string? GetVariable(string name)
     {

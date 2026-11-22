@@ -82,8 +82,17 @@
       </Border>
 
       <!-- Results -->
-      <Grid IsVisible="{Binding IsResults}" RowDefinitions="Auto,Auto,*">
-        <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,10">
+      <Grid IsVisible="{Binding IsResults}" RowDefinitions="Auto,Auto,Auto,*">
+        <Border Classes="card" Background="{DynamicResource CautionBg}" Margin="0,0,0,10" Padding="12,8"
+                IsVisible="{Binding ShowElevateHint}">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource CautionFg}"
+                       Text="Bazı sistem klasörleri yönetici izni olmadan okunamadı; boyutları eksik görünüyor." />
+            <Button Grid.Column="1" Content="Yönetici olarak yeniden başlat" Margin="10,0,0,0"
+                    Command="{Binding RestartElevatedCommand}" />
+          </Grid>
+        </Border>
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*" Margin="0,0,0,10">
           <ToggleButton Grid.Column="0" Classes="filter" IsChecked="{Binding ShowSafe}" Margin="0,0,6,0">
             <StackPanel Spacing="2">
               <Border Classes="chip safe" HorizontalAlignment="Left"><TextBlock Text="Güvenli" /></Border>
@@ -104,17 +113,17 @@
           </ToggleButton>
         </Grid>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,10">
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,10">
           <TextBox Text="{Binding SearchText}" Watermark="Ara: ad, klasör veya kategori" CornerRadius="8" />
           <Button Grid.Column="1" Content="Tümünü seç" Margin="8,0,0,0" Command="{Binding SelectAllVisibleCommand}" />
           <Button Grid.Column="2" Content="Hiçbiri" Margin="6,0,0,0" Command="{Binding SelectNoneCommand}" />
           <Button Grid.Column="3" Content="Yeniden tara" Margin="6,0,0,0" Command="{Binding ScanCommand}" />
         </Grid>
 
-        <TextBlock Grid.Row="2" IsVisible="{Binding IsEmptyResult}" HorizontalAlignment="Center" Margin="0,40"
+        <TextBlock Grid.Row="3" IsVisible="{Binding IsEmptyResult}" HorizontalAlignment="Center" Margin="0,40"
                    Text="Temizlenecek bir şey bulunamadı. Diskiniz zaten derli toplu." Classes="muted" FontSize="14" />
 
-        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Disabled">
           <ItemsControl ItemsSource="{Binding Categories}" Margin="0,0,16,0">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:CategoryViewModel">
@@ -128,7 +137,7 @@
                       <DataTemplate x:DataType="vm:FindingViewModel">
                         <Border Classes="card" Margin="0,0,0,8" Padding="12,10">
                           <Grid ColumnDefinitions="Auto,*,Auto">
-                            <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Top" Margin="0,0,6,0" />
                             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                               <WrapPanel>
                                 <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="0,0,8,0" VerticalAlignment="Center" />
@@ -137,7 +146,7 @@
                                   <TextBlock Text="{Binding RiskText}" />
                                 </Border>
                                 <Border Classes="chip caution" IsVisible="{Binding RequiresAdmin}" Margin="0,0,6,0"
-                                        ToolTip.Tip="Bazı dosyalar yönetici izni olmadan silinemez; silinemeyenler raporda gösterilir.">
+                                        ToolTip.Tip="Temizlerken yönetici (root) parolası istenir.">
                                   <TextBlock Text="Yönetici" />
                                 </Border>
                                 <Border Classes="chip risky" IsVisible="{Binding PermanentOnly}">
@@ -147,12 +156,42 @@
                               <TextBlock Text="{Binding Description}" Classes="muted" TextWrapping="Wrap" />
                               <TextBlock Text="{Binding Root}" Classes="muted" FontSize="11.5" Opacity="0.8"
                                          TextTrimming="LeadingCharacterEllipsis" ToolTip.Tip="{Binding Root}" />
+                              <TextBlock Text="{Binding SelectionText}" IsVisible="{Binding HasPartialSelection}"
+                                         FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SystemAccentColor}" />
+                              <ToggleButton Classes="link" IsVisible="{Binding HasItems}" IsChecked="{Binding IsExpanded}" Margin="0,2,0,0">
+                                <TextBlock Text="{Binding ExpandText}" FontSize="12" />
+                              </ToggleButton>
+                              <StackPanel Spacing="2" IsVisible="{Binding IsExpanded}" Margin="0,4,0,0">
+                                  <ScrollViewer MaxHeight="280" HorizontalScrollBarVisibility="Disabled">
+                                    <ItemsControl ItemsSource="{Binding ShownItems}">
+                                      <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ItemViewModel">
+                                          <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,1">
+                                            <CheckBox IsChecked="{Binding IsSelected}" MinHeight="24" Padding="4,0" />
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                              <TextBlock Text="{Binding Path}" FontSize="12" TextTrimming="LeadingCharacterEllipsis"
+                                                         ToolTip.Tip="{Binding Path}" />
+                                              <TextBlock Text="{Binding Note}" IsVisible="{Binding HasNote}" Classes="muted" FontSize="11"
+                                                         TextTrimming="LeadingCharacterEllipsis" ToolTip.Tip="{Binding Note}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Margin="8,0,4,0" VerticalAlignment="Center">
+                                              <TextBlock Text="{Binding SizeText}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                                              <TextBlock Text="{Binding DateText}" Classes="muted" FontSize="10.5" HorizontalAlignment="Right" />
+                                            </StackPanel>
+                                          </Grid>
+                                        </DataTemplate>
+                                      </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                  </ScrollViewer>
+                                  <TextBlock Text="{Binding MoreItemsText}" Classes="muted" FontSize="11" />
+                                </StackPanel>
                             </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="4" Margin="12,0,0,0" VerticalAlignment="Center"
+                            <StackPanel Grid.Column="2" Spacing="4" Margin="12,0,0,0" VerticalAlignment="Top"
                                         HorizontalAlignment="Right" MinWidth="96">
                               <TextBlock Text="{Binding SizeText}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Right" />
                               <TextBlock Text="{Binding CountText}" Classes="muted" HorizontalAlignment="Right" />
                               <Button Content="Klasörü aç" FontSize="11.5" Padding="8,3" HorizontalAlignment="Right"
+                                      IsVisible="{Binding CanOpenFolder}"
                                       Command="{Binding #Root.((vm:MainViewModel)DataContext).OpenFolderCommand}"
                                       CommandParameter="{Binding}" />
                             </StackPanel>
@@ -208,7 +247,7 @@
                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                         <TextBlock Text="{Binding Root}" Classes="muted" TextTrimming="LeadingCharacterEllipsis" />
                       </StackPanel>
-                      <TextBlock Grid.Column="1" Text="{Binding SizeText}" FontWeight="SemiBold" Margin="10,0,0,0" />
+                      <TextBlock Grid.Column="1" Text="{Binding SelectedSizeText}" FontWeight="SemiBold" Margin="10,0,0,0" />
                     </Grid>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
@@ -217,6 +256,9 @@
             <StackPanel Grid.Row="3" Spacing="6" Margin="0,12,0,0">
               <Border Classes="chip risky" CornerRadius="8" Padding="10,6" IsVisible="{Binding HasRiskySelected}">
                 <TextBlock TextWrapping="Wrap" Text="Riskli kalemler seçili. Bunlar geri getirilemeyebilir; emin değilseniz geri dönüp seçimi kaldırın." />
+              </Border>
+              <Border Classes="chip caution" CornerRadius="8" Padding="10,6" IsVisible="{Binding HasAdminSelected}">
+                <TextBlock TextWrapping="Wrap" Text="Yönetici gerektiren kalemler için bir kez parola / izin sorulacak; bunlar kalıcı silinir." />
               </Border>
               <Border Classes="chip caution" CornerRadius="8" Padding="10,6" IsVisible="{Binding HasPermanentOnlySelected}">
                 <TextBlock TextWrapping="Wrap" Text="'Kalıcı silinir' etiketli kalemler çöp kutusuna taşınmaz." />

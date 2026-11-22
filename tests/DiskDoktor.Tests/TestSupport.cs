@@ -42,6 +42,9 @@ public sealed class FakeEnv(OsKind os, string home, string temp, string appBase)
     public string HomeDirectory { get; } = home;
     public string TempDirectory { get; } = temp;
     public string AppBaseDirectory { get; } = appBase;
+    public bool IsElevated { get; set; }
+    public Dictionary<string, string> Programs { get; } = new();
+    public string? FindProgram(string name) => Programs.TryGetValue(name, out var p) ? p : null;
     public string? GetVariable(string name) => Vars.TryGetValue(name, out var v) ? v : null;
     public string? GetSpecialFolder(Environment.SpecialFolder f) => Folders.TryGetValue(f, out var v) ? v : null;
 }
