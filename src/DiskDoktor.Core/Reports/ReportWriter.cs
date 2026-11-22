@@ -48,7 +48,10 @@ public static class ReportWriter
         sb.AppendLine("# DiskDoktor temizlik raporu").AppendLine();
         sb.AppendLine($"- Tarih: {r.StartedUtc.ToLocalTime().ToString("g", c)}");
         sb.AppendLine($"- Bilgisayar: {machine}");
-        sb.AppendLine($"- Kip: {(r.Mode == DeleteMode.Trash ? "Çöp kutusuna taşı" : "Kalıcı sil")}");
+        string kip = r.Mode == DeleteMode.Trash ? "Çöp kutusuna taşı" : "Kalıcı sil";
+        if (r.Mode == DeleteMode.Trash && r.DeletedPermanentlyCount > 0)
+            kip += $" ({r.DeletedPermanentlyCount} kalem kalıcı silindi: yönetici, komut veya çöp kutusu kuralları)";
+        sb.AppendLine($"- Kip: {kip}");
         sb.AppendLine($"- {(r.Mode == DeleteMode.Trash ? "Taşınan/kazanılan" : "Kazanılan")} alan: **{SizeFormatter.Format(r.BytesFreed, c)}**");
         sb.AppendLine($"- Başarılı: {r.SucceededCount}, sorunlu: {r.FailedCount}{(r.Cancelled ? " (iptal edildi)" : "")}");
         if (r.LogFile is not null) sb.AppendLine($"- Günlük: `{r.LogFile}`");

@@ -21,6 +21,8 @@ public sealed class CleanResult
     public bool Cancelled { get; init; }
     public string? LogFile { get; init; }
     public long BytesFreed => Items.Sum(i => i.BytesFreed);
+    public int TrashedCount => Items.Count(i => i.Outcome == ItemOutcome.Trashed);
+    public int DeletedPermanentlyCount => Items.Count(i => i.Outcome is ItemOutcome.Deleted or ItemOutcome.Partial);
     public int SucceededCount => Items.Count(i => i.Outcome is ItemOutcome.Deleted or ItemOutcome.Trashed);
     public int FailedCount => Items.Count(i => i.Outcome is ItemOutcome.Failed or ItemOutcome.Partial or ItemOutcome.Skipped);
 }
@@ -270,7 +272,10 @@ public sealed class SafeDeleter(ISystemEnvironment env, ITrash trash, string? lo
             var payload = new
             {
                 started = result.StartedUtc,
-                mode = result.Mode.ToString(),
+                requestedMode = result.Mode.ToString(),
+                // What really happened: admin, command and trash-bin rules are always permanent.
+                trashedCount = result.TrashedCount,
+                deletedPermanentlyCount = result.DeletedPermanentlyCount,
                 cancelled = result.Cancelled,
                 bytesFreed = result.BytesFreed,
                 items = result.Items.Select(i => new

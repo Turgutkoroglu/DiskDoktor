@@ -112,6 +112,15 @@ public class SafeDeleterTests
         Assert.Equal([Path.Combine(normal.Root, "a")], trash.Moved);
         Assert.Contains(r.Items, i => i.Outcome == ItemOutcome.Trashed);
         Assert.Contains(r.Items, i => i.Outcome == ItemOutcome.Deleted);
+
+        // The log and report must not claim everything went to the trash.
+        Assert.Equal(1, r.TrashedCount);
+        Assert.Equal(1, r.DeletedPermanentlyCount);
+        var log = System.Text.Json.JsonDocument.Parse(File.ReadAllText(r.LogFile!)).RootElement;
+        Assert.Equal("Trash", log.GetProperty("requestedMode").GetString());
+        Assert.Equal(1, log.GetProperty("trashedCount").GetInt32());
+        Assert.Equal(1, log.GetProperty("deletedPermanentlyCount").GetInt32());
+        Assert.Contains("1 kalem kalıcı silindi", DiskDoktor.Core.Reports.ReportWriter.ToMarkdown(r, "pc"));
     }
 
     [Fact]
