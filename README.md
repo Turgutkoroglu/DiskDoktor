@@ -10,9 +10,18 @@ dosyalarını bulur; önce gösterir, siz onaylamadan hiçbir şey silinmez.
 
 1. GitHub'da bu deponun **Releases** sayfasından işletim sisteminize uygun dosyayı indirin
    (depo gizli olduğu için GitHub hesabınızla giriş yapmış olmanız gerekir):
-   - Windows: `DiskDoktor-win-x64.zip` → açın, `DiskDoktor.exe`'ye çift tıklayın.
-   - Linux: `DiskDoktor-linux-x64.tar.gz` → `tar xzf …`, sonra `chmod +x DiskDoktor && ./DiskDoktor`.
-   - macOS (M1/M2/M3): `DiskDoktor-osx-arm64.zip` → açın, sağ tık → Aç.
+   - **Windows:** `DiskDoktor-win-x64.zip` (ARM'lı Surface vb. için `win-arm64`) → zip'i bir klasöre çıkarın,
+     `DiskDoktor.exe`'ye çift tıklayın. "Windows bilgisayarınızı korudu" uyarısında **Ek bilgi → Yine de çalıştır**.
+     Kurulum gerekmez; masaüstü kısayolu için exe'ye sağ tık → Gönder → Masaüstü.
+   - **Linux:** `DiskDoktor-linux-x64.tar.gz` (Raspberry Pi vb. için `linux-arm64`):
+     ```bash
+     tar xzf DiskDoktor-linux-x64.tar.gz && cd DiskDoktor && ./install.sh
+     ```
+     Uygulama menüsüne simgesiyle eklenir (sudo gerekmez). Kaldırmak için `./install.sh --kaldir`.
+     Kurmadan denemek için `./DiskDoktor` yeterli.
+   - **macOS:** Apple Silicon (M1–M4) için `DiskDoktor-osx-arm64.zip`, Intel Mac için `osx-x64` → zip'i açın,
+     `DiskDoktor.app`'i Uygulamalar klasörüne sürükleyin. İmzasız olduğu için ilk açılışta **sağ tık → Aç → Aç**
+     (gerekirse Sistem Ayarları → Gizlilik ve Güvenlik → "Yine de Aç").
 2. **Taramayı başlat**'a basın. Bulgular Güvenli / Dikkat / Riskli olarak gruplanır; Güvenli olanlar seçili gelir.
 3. İstediklerinizi işaretleyin → **Temizle…** → listeyi kontrol edin → **Temizliği başlat**.
 4. Varsayılan olarak dosyalar çöp kutusuna taşınır (geri alınabilir). Sonunda Markdown/CSV rapor kaydedebilirsiniz.
@@ -36,14 +45,15 @@ Windows'ta uygulama konsol penceresi açmaz; çıktıyı görmek için `DiskDokt
 
 ## Dağıtım
 
-Tek dosyalık, .NET kurulumu gerektirmeyen sürümler `dist/<platform>/` altına çıkar:
+Tek dosyalık, .NET kurulumu gerektirmeyen sürümler `dist/<platform>/` altına, paylaşılmaya hazır arşivler
+(Windows `.zip`, Linux `.tar.gz` + `install.sh`, macOS `.app` içeren `.zip`) `dist/release/` altına çıkar:
 
 ```bash
 scripts/publish.sh                 # hepsi
 scripts/publish.sh win-x64 osx-arm64
 ```
 
-Windows'ta: `.\scripts\publish.ps1`. Platformlar: `win-x64 win-arm64 linux-x64 linux-arm64 osx-x64 osx-arm64`.
+Windows'ta: `.\scripts\publish.ps1` (yalnız `dist/<platform>/`, arşiv üretmez; arşiv için WSL'de `publish.sh`). Platformlar: `win-x64 win-arm64 linux-x64 linux-arm64 osx-x64 osx-arm64`.
 
 - Linux: `chmod +x DiskDoktor && ./DiskDoktor`. Grafik oturumu (X11 veya XWayland) gerekir.
 - macOS: imzasız olduğu için ilk açılışta sağ tık → Aç. Çöp kutusu kuralı için Tam Disk Erişimi gerekebilir.
